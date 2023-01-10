@@ -1,0 +1,1 @@
+n=int(input("Entrez la taille de la liste")
