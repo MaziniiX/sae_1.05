@@ -5,69 +5,98 @@ graine = int(input("Veuillez rentrez une graine : "))  # Définition de la grain
 random.seed(graine)
 print()
 
-
-def tirage():  # Fonction de tirages succesifs
-    nbr = int(input("Combien de tirage voulez-vous faire ? (0 pour arrêtez) "))
-    print()
-    if nbr >= 1:
-        for p in range(nbr):
-            t = random.sample(range(1,45), 5)
-            print(t)
-            print()
-        tirage()
-
-
-def tri_cocktail(tc):
-    debut = 0
-    fin = len(tc) - 1
-    while debut <= fin:
-        echange = False
-        for i in range(debut, fin):
-            if tc[i] > tc[i + 1]:
-                tc[i], tc[i + 1] = tc[i + 1], tc[i]
-                echange = True
-        fin = fin - 1
-        if echange:
-            for i in range(fin, debut, -1):
-                if tc[i - 1] > tc[i]:
-                    tc[i], tc[i - 1] = tc[i - 1], tc[i]
-                    echange = True
-        debut = debut + 1
-
-
-def fusion(L1, L2):
-    n1 = len(L1)
-    n2 = len(L2)
-    L12 = [0] * (n1 + n2)
-    i1 = 0
-    i2 = 0
-    i = 0
-    while i1 < n1 and i2 < n2:
-        if L1[i1] < L2[i2]:
-            L12[i] = L1[i1]
-            i1 += 1
-        else:
-            L12[i] = L2[i2]
-            i2 += 1
-        i += 1
-    while i1 < n1:
-        L12[i] = L1[i1]
-        i1 += 1
-        i += 1
-    while i2 < n2:
-        L12[i] = L2[i2]
-        i2 += 1
-        i += 1
-    return L12
-
-
 print("Les boules gagnantes sont :", end=" ")
 # Tirage des 5 boules gagnantes
 win = random.sample(range(1,45), 5)
-print(win)
+print(win,"\n")
 
-print("\n")
-tirage()
-#liste = [5, 2, 4, 8, 1, 3]
-#tri_cocktail(liste)
-#print(liste)
+
+
+def tirage():
+    nbr = int(input("Combien de tirage voulez-vous faire ? (0 pour arrêtez) "))
+    print()
+    if nbr >= 1:
+        resultat = [] # Initialisation de la liste qui stockera les résultats de tirage
+        for p in range(nbr):
+            t = random.sample(range(1,45), 5)
+            t.sort()  # tri des nombres tirés dans l'ordre croissant
+            resultat.append(t) # Ajout des résultats de tirage à la liste
+        return resultat
+
+def choix_tri():
+    print("Choisissez une méthode de tri:")
+    print("1 - Tri par insertion")
+    print("2 - Tri cocktail")
+    print("3 - Tri fusion")
+    choix = int(input())
+    if choix == 1:
+        tri_insertion(resultat)
+    elif choix == 2:
+        tri_cocktail(resultat)
+    elif choix == 3:
+        tri_fusion(resultat)
+    else:
+        print("Choix non valide.")
+    return resultat
+
+########################################################################################
+####################### Fonctions de tri des séquences de tirages ######################
+########################################################################################
+
+def tri_insertion(resultat):
+    for i in range(1, len(resultat)):
+        cle = resultat[i]
+        j = i-1
+        while j >= 0 and resultat[j] > cle:
+            resultat[j + 1] = resultat[j]
+            j -= 1
+        resultat[j + 1] = cle
+    return resultat
+
+def tri_cocktail(resultat):
+    for i in range(len(resultat)):
+        for j in range(i, len(resultat)):
+            if resultat[i] > resultat[j]:
+                resultat[i], resultat[j] = resultat[j], resultat[i]
+    return resultat
+
+def tri_fusion(resultat):
+    if len(resultat) > 1:
+        milieu = len(resultat) // 2
+        gauche = resultat[:milieu]
+        droite = resultat[milieu:]
+
+        tri_fusion(gauche)
+        tri_fusion(droite)
+
+        i = j = k = 0
+
+        while i < len(gauche) and j < len(droite):
+            if gauche[i] < droite[j]:
+                resultat[k] = gauche[i]
+                i += 1
+            else:
+                resultat[k] = droite[j]
+                j += 1
+            k += 1
+
+        while i < len(gauche):
+            resultat[k] = gauche[i]
+            i += 1
+            k += 1
+
+        while j < len(droite):
+            resultat[k] = droite[j]
+            j += 1
+            k += 1
+
+    return resultat
+
+########################################################################################
+########################################################################################
+########################################################################################
+
+resultat = tirage()
+resultat = choix_tri()
+print(resultat)
+
