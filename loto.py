@@ -1,6 +1,8 @@
 import random
-import os
 import matplotlib.pyplot as plt
+import pickle
+import csv
+from datetime import datetime
 
 graine = int(input("Veuillez rentrez une graine : "))
 random.seed(graine) # Définition de la graine aléatoire pour la génération des séquences
@@ -10,10 +12,9 @@ print("Les boules gagnantes sont :", end=" ")
 # Tirage des 5 boules gagnantes/ La séquence à chercher dans la série de tirage
 win = random.sample(range(1, 45), 5)
 print(win, "\n")
+nbr = int(input("Combien de tirage voulez-vous faire ? (0 pour arrêtez) "))
 
-
-def tirage():
-    nbr = int(input("Combien de tirage voulez-vous faire ? (0 pour arrêtez) "))
+def tirage(nbr):
     print()
     if nbr >= 1:
         resultat = []  # Initialisation de la liste qui stockera les résultats de tirage
@@ -35,10 +36,8 @@ def tri_insertion(resultat):
             resultat[j + 1] = resultat[j]
             j -= 1
         resultat[j + 1] = cle
-
     for i in range(len(resultat)):
         print(f"{i+1}.",resultat[i])
-
     return resultat
 
 
@@ -47,24 +46,18 @@ def tri_cocktail(resultat):
         for j in range(i, len(resultat)):
             if resultat[i] > resultat[j]:
                 resultat[i], resultat[j] = resultat[j], resultat[i]
-
     for i in range(len(resultat)):
         print(f"{i+1}.", resultat[i])
-
     return resultat
-
 
 def tri_fusion(resultat):
     if len(resultat) > 1:
         milieu = len(resultat) // 2
         gauche = resultat[:milieu]
         droite = resultat[milieu:]
-
         tri_fusion(gauche)
         tri_fusion(droite)
-
         i = j = k = 0
-
         while i < len(gauche) and j < len(droite):
             if gauche[i] < droite[j]:
                 resultat[k] = gauche[i]
@@ -73,23 +66,15 @@ def tri_fusion(resultat):
                 resultat[k] = droite[j]
                 j += 1
             k += 1
-
         while i < len(gauche):
             resultat[k] = gauche[i]
             i += 1
             k += 1
-
         while j < len(droite):
             resultat[k] = droite[j]
             j += 1
             k += 1
-
     return resultat
-
-
-"""#####################################################################################
-############################### Fonctions post-triage ##################################
-#####################################################################################"""
 
 def choix_tri():
     print("Choisissez une méthode de tri:")
@@ -104,10 +89,14 @@ def choix_tri():
     elif choix == 3:
         tri_fusion(resultat)
         for i, seq in enumerate(resultat):
-            print(i + 1, ".", seq)
+            print(f"{i+1}.", seq)
     else:
         print("Choix non valide.")
     return resultat
+
+"""#####################################################################################
+####################### Fonctions de recherche dichotomique ############################
+#####################################################################################"""
 
 def dichotomie_iterative(resultat, win):
     debut = 0
@@ -152,11 +141,68 @@ def choix_dichotomie(resultat, win):
     return correspondance
 
 """#######################################################################################
-##########################################################################################
+####################### Fonctions de sauvegarde/chargement de fichier ####################
 #######################################################################################"""
 
-resultat = tirage()
+def export_txt(resultat, graine, nbr):
+    # Création du nom de fichier
+    horodatage = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    nom_fichier = f"{graine}_{nbr}_tirages_{horodatage}.txt"
+    # Ecriture des résultats dans le fichier
+    with open(nom_fichier, "w") as f:
+        for i, seq in enumerate(resultat):
+            f.write(f"{i + 1}. {seq}\n")
+    print(f"Les résultats ont été exportés dans le fichier {nom_fichier}.")
+
+def export_csv(resultat, graine, nbr):
+    # Création du nom de fichier
+    horodatage = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    nom_fichier = f"{graine}_{nbr}_tirages_{horodatage}.csv"
+    # Ecriture des résultats dans le fichier
+    with open(nom_fichier, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Numéro de séquence", "Séquence"])
+        for i, sequence in enumerate(resultat):
+            writer.writerow([i+1, sequence])
+    print(f"Les résultats ont été exportés dans le fichier {nom_fichier}.")
+
+def export_bin(resultat, graine, nbr):
+    horodatage = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    nom_fichier = f"{graine}_{nbr}_tirages_{horodatage}.bin"
+    with open(nom_fichier, "wb") as f:
+        pickle.dump(resultat, f)
+    print(f"Les résultats ont été exportés dans le fichier {nom_fichier}")
+
+"""#######################################################################################
+####################### Fonction d'affichage de la distribution aléatoire ################
+#######################################################################################"""
+
+def afficher_diagramme(resultat):
+    frequence = [0] * 45  # Initialisation de la liste des fréquences à 0
+    for tirage in resultat:
+        for n in tirage:
+            frequence[n - 1] += 1  # Incrémentation de la fréquence pour chaque nombre tiré
+
+    # Séparation des fréquences en plages de 5 nombres consécutifs
+    groupe = []
+    for i in range(0, 45, 5):
+        groupe.append(sum(frequence[i:i + 5]))
+
+    plt.bar(range(1, 46, 5), groupe)
+    plt.xlabel("Plages de nombres (1-5, 6-10, etc.)")
+    plt.ylabel("Fréquence d'apparition")
+    plt.show()
+
+"""#######################################################################################
+####################### Execution du programme ###########################################
+#######################################################################################"""
+
+resultat = tirage(nbr)
 #resultat.append(win) #Permet de tester la fonction de recherche dichotomique indépendamment des séquences générées par la fonction de tirage
 resultat = choix_tri()
 print()
 correspondance = choix_dichotomie(resultat, win)
+export_txt(resultat, graine, nbr)
+export_csv(resultat, graine, nbr)
+export_bin(resultat, graine, nbr)
+afficher_diagramme(resultat)
